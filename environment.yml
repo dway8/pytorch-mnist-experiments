@@ -1,0 +1,13 @@
+name: pytorch-mnist
+channels:
+  - defaults
+  - pytorch
+dependencies:
+  - python=3.9.7
+  - pip=21.2.4
+  - matplotlib=3.4.3
+  - pytorch==1.7.1
+  - torchvision=0.8.2
+  - autopep8=1.5.7
+  - pip:
+      - numpy==1.19.2
