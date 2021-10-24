@@ -88,14 +88,17 @@ def classify_mnist(model_str: str):
             parameter.requires_grad = False
         n_epochs = 2
         log_steps = True
-    elif model_str == 'simple_net':
+    elif model_str == 'simple':
         model = SimpleNet()
         n_epochs = 12
         log_steps = False
-    elif model_str == 'conv_net':
+    elif model_str == 'conv':
         model = ConvNet()
         n_epochs = 12
         log_steps = False
+    else:
+        print('Unknown model, exiting', model_str)
+        return
 
     # default `log_dir` is "runs" - we'll be more specific here
     writer = SummaryWriter('runs/mnist_experiments')
