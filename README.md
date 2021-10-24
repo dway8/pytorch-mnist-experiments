@@ -1,1 +1,1 @@
-# MNIST experiments with Pytorch
+# MNIST experiments with PyTorch
