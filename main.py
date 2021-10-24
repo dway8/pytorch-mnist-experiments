@@ -116,7 +116,7 @@ def classify_mnist(model_str: str):
     train_model_for_n_epochs(model, n_epochs, train_loader,
                              valid_loader, loss_fn, optimizer, device, log_steps, writer)
 
-    test_loss, test_acc = utils.evaluate(model, test_loader, loss_fn)
+    test_loss, test_acc = utils.evaluate(model, test_loader, loss_fn, device)
     print(f'\t Test Loss: {test_loss:.3f} |  Test Acc: {test_acc*100:.2f}%')
 
     # PATH = './mnist_vgg.pth'
@@ -124,12 +124,13 @@ def classify_mnist(model_str: str):
     # vgg_net = torchvision.models.vgg16(pretrained=True)
     # vgg_net.load_state_dict(torch.load(PATH))
 
-    images, labels, probs = utils.get_predictions(model, test_loader)
+    images, labels, probs = utils.get_predictions(model, test_loader, device)
     pred_labels = torch.argmax(probs, 1)
     utils.plot_confusion_matrix(labels, pred_labels, classes)
 
     N_IMAGES = 20
-    utils.plot_most_incorrect(images, labels, probs, classes, N_IMAGES)
+    utils.plot_most_incorrect(
+        images, labels, pred_labels, probs, classes, N_IMAGES)
 
 
 def train_model_for_n_epochs(model, n_epochs, train_loader, valid_loader, loss_fn, optimizer, device, log_steps, writer=None):
@@ -142,7 +143,7 @@ def train_model_for_n_epochs(model, n_epochs, train_loader, valid_loader, loss_f
         train_loss, train_accuracy = utils.train(
             model, train_loader, epoch, device, loss_fn, optimizer, writer, log_steps)
         valid_loss, valid_accuracy = utils.evaluate(
-            model, valid_loader, loss_fn)
+            model, valid_loader, loss_fn, device)
 
         end_time = time.monotonic()
 

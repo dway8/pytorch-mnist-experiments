@@ -1,5 +1,6 @@
 import random
 import torch
+import torch.nn.functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
@@ -108,7 +109,7 @@ def train(model, loader, epoch, device, loss_fn, optimizer, writer, log_steps):
     return loss, accuracy
 
 
-def evaluate(model, loader, loss_fn):
+def evaluate(model, loader, loss_fn, device):
     eval_step = make_eval_step(model, loss_fn, device)
 
     step_losses = []
@@ -123,7 +124,7 @@ def evaluate(model, loader, loss_fn):
     return loss, accuracy
 
 
-def get_predictions(model, iterator):
+def get_predictions(model, iterator, device):
     model.eval()
 
     images = []
@@ -159,7 +160,7 @@ def plot_confusion_matrix(labels, pred_labels, classes):
     cm.plot(values_format='d', cmap='Greens', ax=ax)
 
 
-def get_most_incorrect(images, labels, probs):
+def get_most_incorrect(images, labels, pred_labels, probs):
     corrects = torch.eq(labels, pred_labels)
     incorrect_examples = []
 
@@ -171,9 +172,9 @@ def get_most_incorrect(images, labels, probs):
     return incorrect_examples
 
 
-def plot_most_incorrect(images, labels, probs, classes, n_images, normalize=True):
+def plot_most_incorrect(images, labels, pred_labels, probs, classes, n_images, normalize=True):
 
-    incorrect = get_most_incorrect(images, labels, probs)
+    incorrect = get_most_incorrect(images, labels, pred_labels, probs)
 
     rows = int(np.sqrt(n_images))
     cols = int(np.sqrt(n_images))
