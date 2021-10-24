@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class Net(nn.Module):
+class SimpleNet(nn.Module):
 
     def __init__(self):
-        super(Net, self).__init__()
+        super(SimpleNet, self).__init__()
         self.fc1 = nn.Linear(28 * 28, 400)
         self.fc2 = nn.Linear(400, 200)
         self.fc3 = nn.Linear(200, 10)
