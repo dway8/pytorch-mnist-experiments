@@ -5,6 +5,68 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import ConfusionMatrixDisplay
+import torchvision
+import torchvision.transforms as transforms
+
+BATCH_SIZE = 32
+VALID_RATIO = 0.9
+
+
+def get_dataloaders(model_str: str, small_dataset: bool):
+
+    if model_str == 'vgg':
+        PRETRAINED_SIZE = 224
+        transform = transforms.Compose([
+            transforms.Resize(PRETRAINED_SIZE),
+            transforms.Grayscale(3),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+                0.229, 0.224, 0.225])
+        ])
+    elif model_str == 'simple':
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5), (0.5))
+        ])
+
+    elif model_str == 'conv':
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5), (0.5))
+        ])
+
+    train_data = torchvision.datasets.MNIST(
+        root='./data', train=True, transform=transform, download=True)
+    test_data = torchvision.datasets.MNIST(
+        root='./data', train=False, transform=transform, download=True)
+
+    n_train_examples = int(len(train_data) * VALID_RATIO)
+    n_valid_examples = (len(train_data) - n_train_examples)
+
+    train_data, valid_data = torch.utils.data.random_split(train_data,
+                                                           [n_train_examples, n_valid_examples])
+
+    if small_dataset:
+        # take only 10% of datasets for speed
+        train_data = take_percent_of_array(0.1, train_data)
+        valid_data = take_percent_of_array(0.1, valid_data)
+        test_data = take_percent_of_array(0.1, test_data)
+
+    train_loader = torch.utils.data.DataLoader(
+        train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=2)
+    valid_loader = torch.utils.data.DataLoader(
+        valid_data, batch_size=BATCH_SIZE, shuffle=False, num_workers=2)
+    test_loader = torch.utils.data.DataLoader(
+        test_data, batch_size=BATCH_SIZE, shuffle=False, num_workers=2)
+
+    print('Train data length', len(train_data))
+    print('Validation data length', len(valid_data))
+    print('Test data length', len(test_data))
+
+    one_feature, _ = next(iter(train_data))
+    print('Shape of one feature', one_feature.shape)
+
+    return train_loader, valid_loader, test_loader
 
 
 def take_percent_of_array(pc, arr):
@@ -59,7 +121,7 @@ def calculate_accuracy(y_pred, y):
     return accuracy.cpu().numpy()
 
 
-def make_train_step(model, loss_fn, optimizer):
+def _make_train_step(model, loss_fn, optimizer):
     def train_step(x, y):
         predictions = model(x)
         loss = loss_fn(predictions, y)
@@ -71,7 +133,7 @@ def make_train_step(model, loss_fn, optimizer):
     return train_step
 
 
-def make_eval_step(model, loss_fn, device):
+def _make_eval_step(model, loss_fn, device):
     def eval_step(x, y):
         x = x.to(device)
         y = y.to(device)
@@ -84,7 +146,7 @@ def make_eval_step(model, loss_fn, device):
 
 
 def train(model, loader, epoch, device, loss_fn, optimizer, writer, log_steps):
-    train_step = make_train_step(model, loss_fn, optimizer)
+    train_step = _make_train_step(model, loss_fn, optimizer)
 
     step_losses = []
     step_accuracies = []
@@ -110,7 +172,7 @@ def train(model, loader, epoch, device, loss_fn, optimizer, writer, log_steps):
 
 
 def evaluate(model, loader, loss_fn, device):
-    eval_step = make_eval_step(model, loss_fn, device)
+    eval_step = _make_eval_step(model, loss_fn, device)
 
     step_losses = []
     step_accuracies = []
@@ -160,7 +222,7 @@ def plot_confusion_matrix(labels, pred_labels, classes):
     cm.plot(values_format='d', cmap='Greens', ax=ax)
 
 
-def get_most_incorrect(images, labels, pred_labels, probs):
+def _get_most_incorrect(images, labels, pred_labels, probs):
     corrects = torch.eq(labels, pred_labels)
     incorrect_examples = []
 
@@ -172,12 +234,14 @@ def get_most_incorrect(images, labels, pred_labels, probs):
     return incorrect_examples
 
 
-def plot_most_incorrect(images, labels, pred_labels, probs, classes, n_images, normalize=True):
+def plot_most_incorrect(images, labels, pred_labels, probs, classes, normalize=True):
 
-    incorrect = get_most_incorrect(images, labels, pred_labels, probs)
+    N_IMAGES = 20
 
-    rows = int(np.sqrt(n_images))
-    cols = int(np.sqrt(n_images))
+    incorrect = _get_most_incorrect(images, labels, pred_labels, probs)
+
+    rows = int(np.sqrt(N_IMAGES))
+    cols = int(np.sqrt(N_IMAGES))
 
     fig = plt.figure(figsize=(10, 10))
 

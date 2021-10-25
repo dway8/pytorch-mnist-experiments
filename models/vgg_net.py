@@ -13,5 +13,9 @@ class VGGNet(nn.Module):
         final_layer = nn.Linear(IN_FEATURES, 10)
         self.classifier[-1] = final_layer
 
+        # freeze all layers except the last one to use the pretrained VGG model
+        for parameter in self.classifier[:-1].parameters():
+            parameter.requires_grad = False
+
     def forward(self, x):
         super().forward(self, x)
