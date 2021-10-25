@@ -30,9 +30,9 @@ def get_dataloaders(model_str: str, small_dataset: bool):
         ])
 
     train_data = torchvision.datasets.MNIST(
-        root='./data', train=True, transform=transform, download=True)
+        root='./downloads', train=True, transform=transform, download=True)
     test_data = torchvision.datasets.MNIST(
-        root='./data', train=False, transform=transform, download=True)
+        root='./downloads', train=False, transform=transform, download=True)
 
     n_train_examples = int(len(train_data) * VALID_RATIO)
     n_valid_examples = (len(train_data) - n_train_examples)
